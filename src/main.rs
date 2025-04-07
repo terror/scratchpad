@@ -1,6 +1,16 @@
 use {
-  crate::{app::App, error::Error},
+  crate::{app::App, error::Error, renderer::Renderer},
   snafu::{Backtrace, ErrorCompat, ResultExt, Snafu},
+  std::{
+    sync::Arc,
+    time::{Duration, Instant},
+  },
+  wgpu::{
+    Color, LoadOp, Operations, PowerPreference, RenderPassColorAttachment,
+    RenderPassDescriptor, RequestAdapterOptions, StoreOp, SurfaceConfiguration,
+    TextureUsages, TextureViewDescriptor,
+  },
+  wgpu_glyph::{GlyphBrush, GlyphBrushBuilder, Section, Text, ab_glyph},
   winit::{
     application::ApplicationHandler,
     dpi::PhysicalSize,
@@ -13,6 +23,7 @@ use {
 
 mod app;
 mod error;
+mod renderer;
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
 

@@ -13,6 +13,21 @@ pub enum Error {
     backtrace: Option<Backtrace>,
     source: winit::error::OsError,
   },
+  #[snafu(display("failed to create surface"))]
+  CreateSurface {
+    backtrace: Option<Backtrace>,
+    source: wgpu::CreateSurfaceError,
+  },
+  #[snafu(display("failed to get current texture"))]
+  CurrentTexture {
+    backtrace: Option<Backtrace>,
+    source: wgpu::SurfaceError,
+  },
+  #[snafu(display("failed to get device"))]
+  Device {
+    backtrace: Option<Backtrace>,
+    source: wgpu::RequestDeviceError,
+  },
   #[snafu(display("failed to run app"))]
   RunApp {
     backtrace: Option<Backtrace>,

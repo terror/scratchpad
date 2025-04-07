@@ -29,7 +29,7 @@ impl Renderer {
         force_fallback_adapter: false,
       })
       .await
-      .ok_or_else(|| Error::internal("Failed to get GPU adapter"))?;
+      .ok_or(Error::internal("failed to get gpu adapter"))?;
 
     let (device, queue) = adapter
       .request_device(
@@ -66,12 +66,13 @@ impl Renderer {
 
     surface.configure(&device, &config);
 
-    let staging_belt = wgpu::util::StagingBelt::new(1024);
+    let staging_belt = StagingBelt::new(1024);
 
-    let font_data = include_bytes!("../assets/FiraCode-Regular.ttf");
-
-    let font = ab_glyph::FontArc::try_from_slice(font_data)
-      .map_err(|e| Error::internal(format!("Failed to load font: {}", e)))?;
+    let font =
+      FontArc::try_from_slice(include_bytes!("../assets/FiraCode-Regular.ttf"))
+        .map_err(|error| {
+          Error::internal(format!("failed to load font: {error}"))
+        })?;
 
     let glyph_brush =
       GlyphBrushBuilder::using_font(font).build(&device, format);

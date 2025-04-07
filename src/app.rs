@@ -2,7 +2,7 @@ use super::*;
 
 pub struct App {
   cursor_position: usize,
-  editor_content: String,
+  editor_content: Rope,
   error: Option<Error>,
   renderer: Option<Renderer>,
   window: Option<Arc<Window>>,
@@ -12,7 +12,7 @@ impl App {
   pub fn new() -> Self {
     Self {
       cursor_position: 0,
-      editor_content: String::new(),
+      editor_content: Rope::new(),
       error: None,
       renderer: None,
       window: None,
@@ -33,7 +33,8 @@ impl App {
 
   fn render(&mut self) -> Result {
     if let Some(renderer) = &mut self.renderer {
-      renderer.render(&self.editor_content, self.cursor_position)?;
+      let text_content = self.editor_content.to_string();
+      renderer.render(&text_content, self.cursor_position)?;
     }
 
     Ok(())
@@ -44,13 +45,17 @@ impl App {
       match key {
         Key::Named(NamedKey::Backspace) => {
           if self.cursor_position > 0 {
-            self.editor_content.remove(self.cursor_position - 1);
+            self
+              .editor_content
+              .remove(self.cursor_position - 1..self.cursor_position);
             self.cursor_position -= 1;
           }
         }
         Key::Named(NamedKey::Delete) => {
-          if self.cursor_position < self.editor_content.len() {
-            self.editor_content.remove(self.cursor_position);
+          if self.cursor_position < self.editor_content.len_chars() {
+            self
+              .editor_content
+              .remove(self.cursor_position..self.cursor_position + 1);
           }
         }
         Key::Named(NamedKey::ArrowLeft) => {
@@ -59,7 +64,7 @@ impl App {
           }
         }
         Key::Named(NamedKey::ArrowRight) => {
-          if self.cursor_position < self.editor_content.len() {
+          if self.cursor_position < self.editor_content.len_chars() {
             self.cursor_position += 1;
           }
         }
@@ -67,18 +72,18 @@ impl App {
           self.cursor_position = 0;
         }
         Key::Named(NamedKey::End) => {
-          self.cursor_position = self.editor_content.len();
+          self.cursor_position = self.editor_content.len_chars();
         }
         Key::Named(NamedKey::Enter) => {
-          self.editor_content.insert(self.cursor_position, '\n');
+          self.editor_content.insert(self.cursor_position, "\n\n");
           self.cursor_position += 1;
         }
         Key::Named(NamedKey::Space) => {
-          self.editor_content.insert(self.cursor_position, ' ');
+          self.editor_content.insert(self.cursor_position, " ");
           self.cursor_position += 1;
         }
         Key::Character(c) => {
-          self.editor_content.insert_str(self.cursor_position, &c);
+          self.editor_content.insert(self.cursor_position, &c);
           self.cursor_position += c.len();
         }
         _ => {}

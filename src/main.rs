@@ -1,5 +1,6 @@
 use {
   crate::{app::App, error::Error, renderer::Renderer},
+  ropey::Rope,
   snafu::{Backtrace, ErrorCompat, ResultExt, Snafu},
   std::{
     sync::Arc,
@@ -8,9 +9,11 @@ use {
   wgpu::{
     Color, LoadOp, Operations, PowerPreference, RenderPassColorAttachment,
     RenderPassDescriptor, RequestAdapterOptions, StoreOp, SurfaceConfiguration,
-    TextureUsages, TextureViewDescriptor,
+    TextureUsages, TextureViewDescriptor, util::StagingBelt,
   },
-  wgpu_glyph::{GlyphBrush, GlyphBrushBuilder, Section, Text, ab_glyph},
+  wgpu_glyph::{
+    GlyphBrush, GlyphBrushBuilder, Section, Text, ab_glyph::FontArc,
+  },
   winit::{
     application::ApplicationHandler,
     dpi::PhysicalSize,

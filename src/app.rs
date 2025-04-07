@@ -75,7 +75,7 @@ impl App {
           self.cursor_position = self.editor_content.len_chars();
         }
         Key::Named(NamedKey::Enter) => {
-          self.editor_content.insert(self.cursor_position, "\n\n");
+          self.editor_content.insert(self.cursor_position, "\n");
           self.cursor_position += 1;
         }
         Key::Named(NamedKey::Space) => {
@@ -192,5 +192,284 @@ impl ApplicationHandler for App {
     if let Some(window) = &self.window {
       window.request_redraw();
     }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn insert_character() {
+    let mut app = App::new();
+
+    app
+      .handle_keyboard_input(Key::Character("a".into()), ElementState::Pressed);
+
+    assert_eq!(app.editor_content.to_string(), "a");
+    assert_eq!(app.cursor_position, 1);
+
+    app
+      .handle_keyboard_input(Key::Character("b".into()), ElementState::Pressed);
+
+    assert_eq!(app.editor_content.to_string(), "ab");
+    assert_eq!(app.cursor_position, 2);
+  }
+
+  #[test]
+  fn backspace() {
+    let mut app = App::new();
+
+    app
+      .handle_keyboard_input(Key::Character("a".into()), ElementState::Pressed);
+
+    app
+      .handle_keyboard_input(Key::Character("b".into()), ElementState::Pressed);
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::Backspace),
+      ElementState::Pressed,
+    );
+
+    assert_eq!(app.editor_content.to_string(), "a");
+    assert_eq!(app.cursor_position, 1);
+  }
+
+  #[test]
+  fn delete_character() {
+    let mut app = App::new();
+
+    app
+      .handle_keyboard_input(Key::Character("a".into()), ElementState::Pressed);
+
+    app
+      .handle_keyboard_input(Key::Character("b".into()), ElementState::Pressed);
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::ArrowLeft),
+      ElementState::Pressed,
+    );
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::Delete),
+      ElementState::Pressed,
+    );
+
+    assert_eq!(app.editor_content.to_string(), "a");
+    assert_eq!(app.cursor_position, 1);
+  }
+
+  #[test]
+  fn cursor_movement() {
+    let mut app = App::new();
+
+    app
+      .handle_keyboard_input(Key::Character("a".into()), ElementState::Pressed);
+
+    app
+      .handle_keyboard_input(Key::Character("b".into()), ElementState::Pressed);
+
+    app
+      .handle_keyboard_input(Key::Character("c".into()), ElementState::Pressed);
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::ArrowLeft),
+      ElementState::Pressed,
+    );
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::ArrowLeft),
+      ElementState::Pressed,
+    );
+
+    assert_eq!(app.cursor_position, 1);
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::ArrowRight),
+      ElementState::Pressed,
+    );
+
+    assert_eq!(app.cursor_position, 2);
+  }
+
+  #[test]
+  fn home_end_keys() {
+    let mut app = App::new();
+
+    app
+      .handle_keyboard_input(Key::Character("a".into()), ElementState::Pressed);
+
+    app
+      .handle_keyboard_input(Key::Character("b".into()), ElementState::Pressed);
+
+    app
+      .handle_keyboard_input(Key::Character("c".into()), ElementState::Pressed);
+
+    app
+      .handle_keyboard_input(Key::Named(NamedKey::Home), ElementState::Pressed);
+
+    assert_eq!(app.cursor_position, 0);
+
+    app.handle_keyboard_input(Key::Named(NamedKey::End), ElementState::Pressed);
+
+    assert_eq!(app.cursor_position, 3);
+  }
+
+  #[test]
+  fn enter_key() {
+    let mut app = App::new();
+
+    app
+      .handle_keyboard_input(Key::Character("a".into()), ElementState::Pressed);
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::Enter),
+      ElementState::Pressed,
+    );
+
+    app
+      .handle_keyboard_input(Key::Character("b".into()), ElementState::Pressed);
+
+    assert_eq!(app.editor_content.to_string(), "a\nb");
+    assert_eq!(app.cursor_position, 3);
+  }
+
+  #[test]
+  fn space_key() {
+    let mut app = App::new();
+
+    app
+      .handle_keyboard_input(Key::Character("a".into()), ElementState::Pressed);
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::Space),
+      ElementState::Pressed,
+    );
+
+    app
+      .handle_keyboard_input(Key::Character("b".into()), ElementState::Pressed);
+
+    assert_eq!(app.editor_content.to_string(), "a b");
+    assert_eq!(app.cursor_position, 3);
+  }
+
+  #[test]
+  fn insert_at_cursor_position() {
+    let mut app = App::new();
+
+    app
+      .handle_keyboard_input(Key::Character("a".into()), ElementState::Pressed);
+
+    app
+      .handle_keyboard_input(Key::Character("c".into()), ElementState::Pressed);
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::ArrowLeft),
+      ElementState::Pressed,
+    );
+
+    app
+      .handle_keyboard_input(Key::Character("b".into()), ElementState::Pressed);
+
+    assert_eq!(app.editor_content.to_string(), "abc");
+    assert_eq!(app.cursor_position, 2);
+  }
+
+  #[test]
+  fn multiple_characters_deletion() {
+    let mut app = App::new();
+
+    app
+      .handle_keyboard_input(Key::Character("a".into()), ElementState::Pressed);
+
+    app
+      .handle_keyboard_input(Key::Character("b".into()), ElementState::Pressed);
+
+    app
+      .handle_keyboard_input(Key::Character("c".into()), ElementState::Pressed);
+
+    app
+      .handle_keyboard_input(Key::Character("d".into()), ElementState::Pressed);
+
+    app
+      .handle_keyboard_input(Key::Character("e".into()), ElementState::Pressed);
+
+    app
+      .handle_keyboard_input(Key::Character("f".into()), ElementState::Pressed);
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::Backspace),
+      ElementState::Pressed,
+    );
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::Backspace),
+      ElementState::Pressed,
+    );
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::Backspace),
+      ElementState::Pressed,
+    );
+
+    assert_eq!(app.editor_content.to_string(), "abc");
+    assert_eq!(app.cursor_position, 3);
+  }
+
+  #[test]
+  fn boundary_conditions() {
+    let mut app = App::new();
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::Backspace),
+      ElementState::Pressed,
+    );
+
+    assert_eq!(app.editor_content.to_string(), "");
+    assert_eq!(app.cursor_position, 0);
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::Delete),
+      ElementState::Pressed,
+    );
+
+    assert_eq!(app.editor_content.to_string(), "");
+    assert_eq!(app.cursor_position, 0);
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::ArrowLeft),
+      ElementState::Pressed,
+    );
+
+    assert_eq!(app.cursor_position, 0);
+
+    app
+      .handle_keyboard_input(Key::Character("a".into()), ElementState::Pressed);
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::ArrowRight),
+      ElementState::Pressed,
+    );
+
+    assert_eq!(app.cursor_position, 1);
+
+    app.handle_keyboard_input(
+      Key::Named(NamedKey::ArrowRight),
+      ElementState::Pressed,
+    );
+
+    assert_eq!(app.cursor_position, 1);
+  }
+
+  #[test]
+  fn insert_multi_char_string() {
+    let mut app = App::new();
+
+    app.handle_keyboard_input(
+      Key::Character("hello".into()),
+      ElementState::Pressed,
+    );
+
+    assert_eq!(app.editor_content.to_string(), "hello");
+    assert_eq!(app.cursor_position, 5);
   }
 }
